@@ -1,7 +1,6 @@
 {
   "name": "blockchain_protocol",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -18,5 +17,14 @@
     "dat-swarm-defaults": "1.0.2",
     "discovery-swarm": "6.1.0",
     "get-port": "5.1.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mustafinho/blockchain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mustafinho/blockchain/issues"
+  },
+  "homepage": "https://github.com/mustafinho/blockchain#readme",
+  "description": ""
 }

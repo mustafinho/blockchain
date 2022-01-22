@@ -1,17 +1,26 @@
+import {CronJob} from 'cron'
 import crypto from 'crypto'
 import Swarm from 'discovery-swarm' // create a a network swarm that can use discovery-channel to find and connect peers
 import defaults from 'dat-swarm-defaults' //deploy server that are used to discover other peers
 import getPort from 'get-port' //gets all the TCP ports avalible.
 
-import {addBlock, getBlock, blockchain, getLatestBlock} from './chain'
+import { addBlock, getBlock, blockchain, getLatestBlock, generateNextBlock } from './chain'
+
+
+// to start create
+
 
 /**
  * @notice basic p2p network that creates and keep a TCP connection to send and recive
  here we request for latest block and receving it 
  */
 
+//kep track of the registred miners
 let registeredMiners = [];
+
+//to know who mined the last block
 const lastBlockMinedBy = [];
+
 const messageType = {
     REQUEST_LATEST_BLOCK: 'requestLatestBlock',
     LATEST_BLOCK: 'latestBlock',
@@ -79,6 +88,31 @@ const writeMessageToPeers = (type: string, data): void => {
         sendMessage(id, type, data);
     }
 }
+
+const job = new CronJob('30 * * * * *', () =>{
+    let index = 0 //first block
+
+    if(lastBlockMinedBy){
+        let newIndex = registeredMiners.indexOf(lastBlockMinedBy);
+        index = ( newIndex + 1 > registeredMiners.length -1) ? 0 : newIndex + 1; 
+    }
+    lastBlockMinedBy = registeredMiners[index];
+
+    console.log(`--- REQUESTING NEW BLOCK FROM: ${registeredMiners[index]} index: ${index}`);
+    console.log(JSON.stringify(registeredMiners));
+
+    if(registeredMiners[index] === myPeerId.toString('hex')){
+        console.log('-----------create next block ----------------')
+        let newBlock = generateNextBlock(null)
+        addBlock(newBlock);
+        console.log(JSON.stringify(newBlock));
+        writeMessageToPeers(messageType.RECEIVE_NEW_BLOCK, newBlock);
+        console.log(JSON.stringify(blockchain));
+        console.log('-----------create next block ----------------')
+    }
+})
+
+job.start()
 
 //continuisly monitor swarm.on event messages
 (async () => {
@@ -175,6 +209,10 @@ const writeMessageToPeers = (type: string, data): void => {
 
             if (peers[peerId].seq == seq) {
                 delete peers[peerId]
+                console.log(`--- registeredMiners before: ${JSON.stringify(registeredMiners)}`);
+                let index = registeredMiners.indexOf(peerId)
+                if (index > -1) registeredMiners.splice(index, 1);
+                console.log(`--- registeredMiners end: ${JSON.stringify(registeredMiners)}`)
             }
 
         });
@@ -207,16 +245,16 @@ setTimeout(() => {
 }, 5000)
 
 /**
- * updates maninrs every Second
+ * request all exiting peers in the network to add them as miners
  */
 setTimeout(() => {
     writeMessageToPeers(messageType.REQUEST_ALL_REGISTER_MINERS, null)
 }, 5000)
 
 /**
- * REGIST yours peers as a miner
+ * regist peers as miners
  */
- setTimeout(() => {
+setTimeout(() => {
     registeredMiners.push(myPeerId.toString('hex'));
     console.log('----------Register my miner --------------');
     console.log(registeredMiners);

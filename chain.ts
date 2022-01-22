@@ -1,4 +1,5 @@
 import { BlockHeader, Block } from './block'
+import {SHA256} from './crypto'
 
 const getGenesisBlock = () => {
     let blockHeader = new BlockHeader(
@@ -9,10 +10,13 @@ const getGenesisBlock = () => {
 
     return new Block(blockHeader, 0, null);
 }
-
+//creation of gnesis block
 export const blockchain = [getGenesisBlock()]
+
 export const getLatestBlock = () => blockchain[blockchain.length - 1]
 
+
+//send blocks
 export const addBlock = (newBlock) => {
     const prevBlock = getLatestBlock();
 
@@ -22,7 +26,28 @@ export const addBlock = (newBlock) => {
 
 }
 
+//request blocks
 export const getBlock = (index) => {
     if (blockchain.length - 1 >= index) return blockchain[index]
     else return null
+}
+
+export const storeBlock = (newBlock) =>{
+
+}
+
+export const generateNextBlock = (txns)  =>{
+    const prevBlock = getLatestBlock(), prevMerkleRoot = prevBlock.blockHeader.merkleRoot;
+
+    const nextIndex = prevBlock.index + 1;
+
+    const nexTime = new Date().getTime();
+
+    const nextMerkleRoot = SHA256(1, prevMerkleRoot, nexTime).toString()
+
+    const blockHeader = new BlockHeader(1, prevMerkleRoot, nextMerkleRoot, nexTime)
+    const newBlock = new Block(blockHeader, nextIndex, txns);
+    blockchain.push(newBlock);
+    storeBlock(newBlock);
+    return newBlock
 }

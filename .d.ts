@@ -1,3 +1,3 @@
-declare module 'dat-swarm-defaults'
+declare module "dat-swarm-defaults"
 declare module 'cron'
-`declare module 'discovery-swarm';`
+declare module "discovery-swarm"
